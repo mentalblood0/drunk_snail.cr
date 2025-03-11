@@ -3,7 +3,7 @@ class Parser
   getter ref_regex : Regex
 
   protected def self.expression_regex(open : String, operator : String, close : String, optional : String) : Regex
-    return Regex.new("#{Regex.escape(open)} *(?P<optional>\\(#{Regex.escape(optional)}\\))?\\(#{Regex.escape(operator)}\\)(?P<name>\\w+) *#{Regex.escape(close)}")
+    Regex.new("#{Regex.escape(open)} *(?P<optional>\\(#{Regex.escape(optional)}\\))?\\(#{Regex.escape(operator)}\\)(?P<name>\\w+) *#{Regex.escape(close)}")
   end
 
   def initialize(@open = "<!--",
@@ -57,13 +57,13 @@ class Template
       elsif params.size > 0
         result = ParamLine.new
         last_param_end = 0
-        params.each do |p|
-          plain = line[last_param_end, p.begin - last_param_end]
+        params.each do |param|
+          plain = line[last_param_end, param.begin - last_param_end]
           if plain.size > 0
             result << plain
           end
-          result << Expression.new p
-          last_param_end = p.end
+          result << Expression.new param
+          last_param_end = param.end
         end
         plain = line[last_param_end, line.size]
         if plain.size > 0
@@ -88,4 +88,4 @@ end
 class RenderError < Exception
 end
 
-t = Template.new "left<!-- (param)p1 -->middle<!-- (param)p2 -->right\nplain text\nleft<!-- (ref)r -->right"
+# t = Template.new "left<!-- (param)p1 -->middle<!-- (param)p2 -->right\nplain text\nleft<!-- (ref)r -->right"
