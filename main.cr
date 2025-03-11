@@ -26,19 +26,14 @@ struct Expression
   end
 end
 
-struct Bounds
-  def initialize(@left : String,
-                 @right : String)
-  end
-end
-
 alias ParamLineToken = String | Expression
 alias ParamLine = Array(ParamLineToken)
 
-class RefLine
+struct RefLine
   def initialize(m : Regex::MatchData)
     @expression = Expression.new m
-    @bounds = Bounds.new m.pre_match, m.post_match
+    @left = m.pre_match
+    @right = m.post_match
   end
 end
 
