@@ -2,7 +2,7 @@ require "spec"
 require "../DrunkSnail"
 
 module DrunkSnail
-  struct Syntax
+  private struct Syntax
     getter open : String
     getter close : String
     getter optional : String
@@ -35,6 +35,10 @@ module DrunkSnail
       it "correctly renders optional param while there is also param with more than one value" do
         Template.new("left <!-- (param)p1 --> middle <!-- (optional)(param)p2 --> right\nplain text")
           .render({"p1" => ["lalala", "lululu"], "p2" => "lololo"}).should eq "left lalala middle lololo right\nleft lululu middle  right\nplain text"
+      end
+
+      it "correctly renders ref" do
+        Template.new("one <!-- (ref)r --> two").render({"r" => {"p" => "v"}}, {"r" => Template.new("three")}).should eq "one three two"
       end
 
       parser = Parser.new

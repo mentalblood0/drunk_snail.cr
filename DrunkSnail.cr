@@ -41,12 +41,7 @@ module DrunkSnail
     getter left : String
     getter right : String
 
-    def initialize
-      @left = ""
-      @right = ""
-    end
-
-    def initialize(@left, @right)
+    def initialize(@left = "", @right = "")
     end
 
     def initialize(m : Regex::MatchData)
@@ -107,7 +102,7 @@ module DrunkSnail
       end
     end
 
-    def render(params : TemplateParams = Hash(String, String).new, templates : Templates = Templates.new, external : Bounds = Bounds.new, result : String::Builder = String::Builder.new)
+    def render(params : TemplateParams = {} of String => String, templates : Templates = Templates.new, external : Bounds = Bounds.new)
       String.build do |result|
         @lines.each_with_index do |line, i|
           result << "\n" if i > 0
@@ -148,13 +143,13 @@ module DrunkSnail
           elsif line.is_a? RefLine
             if params.has_key?(line.expression.name)
               param = params[line.expression.name]
-              param = [param] if param.is_a? TemplateParams
-              raise RenderError.new "Expected TemplateParams of array of them for template '#{line.expression.name}'" if !param.is_a? Array
+              param = [param] if !param.is_a? Array
+              raise RenderError.new "Expected TemplateParams or Array(TemplateParams) for template '#{line.expression.name}'" if !param.is_a? Array
               param.each_with_index do |subparams, i|
-                raise RenderError.new "Expected TemplateParams for subtemplate '#{line.expression.name}'" if !subparams.is_a? TemplateParams
+                raise RenderError.new "Expected TemplateParams for subtemplate '#{line.expression.name}'" if !subparams.is_a? Hash
                 result << "\n" if i > 0
                 if !(line.expression.optional && !templates.has_key?(line.expression.name))
-                  templates[line.expression.name].render(subparams, templates, line.bounds + external, result)
+                  result << templates[line.expression.name].render(subparams, templates, line.bounds + external)
                 end
               end
             elsif !line.expression.optional
