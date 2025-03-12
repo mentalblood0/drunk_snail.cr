@@ -48,9 +48,7 @@ module DrunkSnail
       valid_gap = ["", " ", "  "]
       valid_value = ["", "l", "la", "\n"]
       valid_ref = ["#{syntax.open}#{syntax.param}p#{syntax.close}"]
-      one_line_params_number = [2, 3]
 
-      invalid_gap = ["l", "la"]
       invalid_open_tag = (1..syntax.open.size - 1).map { |cut_n| syntax.open[0, cut_n] }
       invalid_close_tag = (1..syntax.close.size - 1).map { |cut_n| syntax.close[0, cut_n] }
       invalid_name = ["1", "-"]

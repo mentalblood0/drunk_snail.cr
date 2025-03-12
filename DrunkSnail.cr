@@ -26,7 +26,7 @@ module DrunkSnail
 
   struct Expression
     getter name : String
-    getter optional : Bool
+    getter? optional : Bool
 
     def initialize(m : Regex::MatchData)
       @name = m["name"]
@@ -49,8 +49,8 @@ module DrunkSnail
       @right = m.post_match
     end
 
-    def +(another : Bounds)
-      Bounds.new another.left + left, right + another.right
+    def +(other : Bounds)
+      Bounds.new other.left + left, right + other.right
     end
   end
 
@@ -111,7 +111,7 @@ module DrunkSnail
           elsif line.is_a? ParamLine
             all_optional = line.all? { |token| !token.is_a?(Expression) || token.optional }
             i = 0
-            while true
+            loop do
               result << "\n" if i > 0
               new_i = i + 1
               result << external.left
@@ -145,9 +145,9 @@ module DrunkSnail
               param = params[line.expression.name]
               param = [param] if !param.is_a? Array
               raise RenderError.new "Expected TemplateParams or Array(TemplateParams) for template '#{line.expression.name}'" if !param.is_a? Array
-              param.each_with_index do |subparams, i|
+              param.each_with_index do |subparams, j|
                 raise RenderError.new "Expected TemplateParams for subtemplate '#{line.expression.name}'" if !subparams.is_a? Hash
-                result << "\n" if i > 0
+                result << "\n" if j > 0
                 if !(line.expression.optional && !templates.has_key?(line.expression.name))
                   result << templates[line.expression.name].render(subparams, templates, line.bounds + external)
                 end
