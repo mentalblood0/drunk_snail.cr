@@ -14,7 +14,7 @@ Uses standard library only
 - Compiled and statically typed yet memory safe
 - Small codebase
 - Allow for parser configuration
-- Significantly (~x2) faster than Nim implementation
+- Significantly (~x2) faster then Nim implementation
 
 ## Example
 
@@ -71,7 +71,7 @@ Result:
    ```yaml
    dependencies:
      drunk_snail:
-       github: mentalblood0/drunk_snail
+       github: mentalblood0/drunk_snail.cr
    ```
 
 2. Run `shards install`
@@ -90,7 +90,7 @@ params = {"Row" => [{"cell" => ["1", "2"]}, {"cell" => ["3", "4"]}]}
 deps = {"Row" => DrunkSnail::Template.new(
   "<tr>\n" \
   "    <td><!-- (param)cell --></td>\n" \
-  "</tr>\n"
+  "</tr>"
 )}
 puts template.render params, deps
 ```
