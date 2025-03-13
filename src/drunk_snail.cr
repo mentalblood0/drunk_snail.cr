@@ -75,6 +75,7 @@ module DrunkSnail
 
   class Template
     @lines = [] of Line
+    @last_size = 64
 
     def initialize(text : String, parser : Parser = Parser.new)
       text.each_line do |line|
@@ -102,63 +103,65 @@ module DrunkSnail
       end
     end
 
-    def render(params : TemplateParams = {} of String => String, templates : Templates = Templates.new, external : Bounds = Bounds.new)
-      String.build do |result|
-        @lines.each_with_index do |line, i|
-          result << "\n" if i > 0
-          if line.is_a? String
-            result << external.left << line << external.right
-          elsif line.is_a? ParamLine
-            all_optional = line.all? { |token| !token.is_a?(Expression) || token.optional? }
-            i = 0
-            loop do
-              result << "\n" if i > 0
-              new_i = i + 1
-              result << external.left
-              line.each do |token|
-                if token.is_a? String
-                  result << token
-                elsif token.is_a? Expression
-                  if params.has_key? token.name
-                    value = params[token.name]
-                    if value.is_a? String
-                      result << value if i == 0
-                      new_i = -1 if !token.optional? || all_optional
-                    elsif value.is_a? Array
-                      new_i = -1 if value.size == i + 1
-                      v = value[i]
-                      raise RenderError.new "Expected String for param '#{token.name}'" if !v.is_a? String
-                      result << v
-                    end
-                  else
-                    raise RenderError.new "Expected key for param '#{token.name}'" if !token.optional?
-                    new_i = -1
+    def render(params : TemplateParams = {} of String => String, templates : Templates = Templates.new, external : Bounds = Bounds.new, result : String::Builder | Nil = nil)
+      is_root = !result
+      result = String::Builder.new @last_size if !result
+      @lines.each_with_index do |line, i|
+        result << "\n" if i > 0
+        if line.is_a? String
+          result << external.left << line << external.right
+        elsif line.is_a? ParamLine
+          all_optional = line.all? { |token| !token.is_a?(Expression) || token.optional? }
+          i = 0
+          loop do
+            result << "\n" if i > 0
+            new_i = i + 1
+            result << external.left
+            line.each do |token|
+              if token.is_a? String
+                result << token
+              elsif token.is_a? Expression
+                if params.has_key? token.name
+                  value = params[token.name]
+                  if value.is_a? String
+                    result << value if i == 0
+                    new_i = -1 if !token.optional? || all_optional
+                  elsif value.is_a? Array
+                    new_i = -1 if value.size == i + 1
+                    v = value[i]
+                    raise RenderError.new "Expected String for param '#{token.name}'" if !v.is_a? String
+                    result << v
                   end
+                else
+                  raise RenderError.new "Expected key for param '#{token.name}'" if !token.optional?
+                  new_i = -1
                 end
               end
-              result << external.right
-              i = new_i
-              break if i == -1
             end
-          elsif line.is_a? RefLine
-            name = line.expression.name
-            if params.has_key?(name)
-              param = params[name]
-              param = [param] if !param.is_a? Array
-              raise RenderError.new "Expected TemplateParams or Array(TemplateParams) for template '#{name}'" if !param.is_a? Array
-              param.each_with_index do |subparams, j|
-                raise RenderError.new "Expected TemplateParams for subtemplate '#{name}'" if !subparams.is_a? Hash
-                result << "\n" if j > 0
-                if !(line.expression.optional? && !templates.has_key?(name))
-                  result << templates[name].render(subparams, templates, line.bounds + external)
-                end
+            result << external.right
+            i = new_i
+            break if i == -1
+          end
+        elsif line.is_a? RefLine
+          name = line.expression.name
+          if params.has_key?(name)
+            param = params[name]
+            param = [param] if !param.is_a? Array
+            raise RenderError.new "Expected TemplateParams or Array(TemplateParams) for template '#{name}'" if !param.is_a? Array
+            param.each_with_index do |subparams, j|
+              raise RenderError.new "Expected TemplateParams for subtemplate '#{name}'" if !subparams.is_a? Hash
+              result << "\n" if j > 0
+              if !(line.expression.optional? && !templates.has_key?(name))
+                templates[name].render(subparams, templates, line.bounds + external, result)
               end
-            elsif !line.expression.optional?
-              raise RenderError.new "Expected params for non-optional subtemplate '#{name}'"
             end
+          elsif !line.expression.optional?
+            raise RenderError.new "Expected params for non-optional subtemplate '#{name}'"
           end
         end
       end
+      @last_size = result.bytesize if is_root
+      result.to_s if is_root
     end
   end
 

@@ -1,0 +1,9 @@
+name: drunk_snail
+version: 1.0.0
+
+authors:
+  - mentalblood <necheporenko.stepan@yandex.ru>
+
+crystal: '>= 1.15.1'
+
+license: MIT
