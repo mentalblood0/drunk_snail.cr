@@ -40,6 +40,18 @@ module DrunkSnail
       it "correctly renders ref" do
         Template.new("one <!-- (ref)r --> two").render({"r" => {"p" => "v"}}, {"r" => Template.new("three")}).should eq "one three two"
       end
+      it "correctly renders 2x2 HTML table" do
+        Template.new("<table>\n    <!-- (ref)Row -->\n</table>").render(
+          {"Row" => [{"cell" => ["1.1", "2.1"]}, {"cell" => ["1.2", "2.2"]}]},
+          {"Row" => Template.new("<tr>\n    <td><!-- (param)cell --></td>\n</tr>")}
+        ).should eq "<table>\n    <tr>\n        <td>1.1</td>\n        <td>2.1</td>\n    </tr>\n    <tr>\n        <td>1.2</td>\n        <td>2.2</td>\n    </tr>\n</table>"
+      end
+      it "correctly renders ref with param" do
+        Template.new("one <!-- (ref)r --> two").render({"r" => {"p" => "three"}}, {"r" => Template.new("<!-- (param)p -->")}).should eq "one three two"
+      end
+      it "correctly renders multivalued ref with param" do
+        Template.new("one <!-- (ref)r --> two").render({"r" => [{"p" => "three"}, {"p" => "four"}]}, {"r" => Template.new("<!-- (param)p -->")}).should eq "one three two\none four two"
+      end
 
       parser = Parser.new
       syntax = Syntax.new parser
@@ -82,6 +94,24 @@ module DrunkSnail
                         Template.new(line).render({"p" => value}).should eq(line)
                       end
                     end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+
+      valid_ref.each do |ref|
+        valid_value.each do |value|
+          valid_other.each do |bound_left|
+            valid_gap.each do |gap_left|
+              valid_gap.each do |gap_right|
+                valid_other.each do |bound_right|
+                  line = bound_left + syntax.open + gap_left + syntax.ref + "R" + gap_right + syntax.close + bound_right
+                  correct = bound_left + value + bound_right
+                  it "correctly renders line '#{line}' as '#{correct}'" do
+                    Template.new(line).render({"R" => {"p" => value}}, {"R" => Template.new ref}).should eq(correct)
                   end
                 end
               end

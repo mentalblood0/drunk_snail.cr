@@ -109,7 +109,7 @@ module DrunkSnail
           if line.is_a? String
             result << external.left << line << external.right
           elsif line.is_a? ParamLine
-            all_optional = line.all? { |token| !token.is_a?(Expression) || token.optional }
+            all_optional = line.all? { |token| !token.is_a?(Expression) || token.optional? }
             i = 0
             loop do
               result << "\n" if i > 0
@@ -123,7 +123,7 @@ module DrunkSnail
                     value = params[token.name]
                     if value.is_a? String
                       result << value if i == 0
-                      new_i = -1 if !token.optional || all_optional
+                      new_i = -1 if !token.optional? || all_optional
                     elsif value.is_a? Array
                       new_i = -1 if value.size == i + 1
                       v = value[i]
@@ -131,7 +131,7 @@ module DrunkSnail
                       result << v
                     end
                   else
-                    raise RenderError.new "Expected key for param '#{token.name}'" if !token.optional
+                    raise RenderError.new "Expected key for param '#{token.name}'" if !token.optional?
                     new_i = -1
                   end
                 end
@@ -141,19 +141,20 @@ module DrunkSnail
               break if i == -1
             end
           elsif line.is_a? RefLine
-            if params.has_key?(line.expression.name)
-              param = params[line.expression.name]
+            name = line.expression.name
+            if params.has_key?(name)
+              param = params[name]
               param = [param] if !param.is_a? Array
-              raise RenderError.new "Expected TemplateParams or Array(TemplateParams) for template '#{line.expression.name}'" if !param.is_a? Array
+              raise RenderError.new "Expected TemplateParams or Array(TemplateParams) for template '#{name}'" if !param.is_a? Array
               param.each_with_index do |subparams, j|
-                raise RenderError.new "Expected TemplateParams for subtemplate '#{line.expression.name}'" if !subparams.is_a? Hash
+                raise RenderError.new "Expected TemplateParams for subtemplate '#{name}'" if !subparams.is_a? Hash
                 result << "\n" if j > 0
-                if !(line.expression.optional && !templates.has_key?(line.expression.name))
-                  result << templates[line.expression.name].render(subparams, templates, line.bounds + external)
+                if !(line.expression.optional? && !templates.has_key?(name))
+                  result << templates[name].render(subparams, templates, line.bounds + external)
                 end
               end
-            elsif !line.expression.optional
-              raise RenderError.new "Expected params for non-optional subtemplate '#{line.expression.name}'"
+            elsif !line.expression.optional?
+              raise RenderError.new "Expected params for non-optional subtemplate '#{name}'"
             end
           end
         end
