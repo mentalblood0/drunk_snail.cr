@@ -2,7 +2,7 @@ require "benchmark"
 require "./src/drunk_snail"
 
 module DrunkSnail
-  Benchmark.ips do |x|
+  Benchmark.ips do |benchmark|
     table = Template.new "<table>\n    <!-- (ref)Row -->\n</table>"
     templates = {"Row" => Template.new "<tr>\n    <td><!-- (param)cell --></td>\n</tr>"}
     (1..3).each do |power|
@@ -17,7 +17,7 @@ module DrunkSnail
         params["Row"] << columns
       end
 
-      x.report("render #{size}x#{size} table") { table.render params, templates }
+      benchmark.report("render #{size}x#{size} table") { table.render params, templates }
     end
   end
 end
