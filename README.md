@@ -1,4 +1,4 @@
-# drunk_snail
+# 🌪️ drunk_snail
 
 Pure [crystal](https://crystal-lang.org/) implementation of template language originally presented in [drunk snail](https://github.com/mentalblood0/drunk_snail)
 
